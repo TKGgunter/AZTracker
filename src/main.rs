@@ -92,7 +92,6 @@ fn add_to_table(input: &Event, rt: &mut String){
     }
 
 
-    //TODO how do we handle this unwrap
     let date = input.date.date.as_ref().expect(UNWRAP_DATE_FAIL);
     *rt += &format!("\t\t<td>{}/{}/{}</td>\n", date.month, date.day, date.year);
 
@@ -364,7 +363,7 @@ fn generate_report(input: &Report)->String{
     let mut i = 0;
 
 
-    //TODO poorly formatted date should be apart of output.
+    //TODO if a poorly formatted date is submitted the error should contain bad date.
     while i < events.len() {
         current_month = events[i].date.date.as_ref().expect(UNWRAP_DATE_FAIL).month as usize;
         rt += &format!("\n<div id=\"{}\" class=\"tabcontent\">\n", MONTHS[current_month-1]);
@@ -500,7 +499,6 @@ fn main() {
 
 
     let report = {
-        //TODO we should handle the errors appropriately. 
         let rt : Report = toml::from_str(&input_file_text).expect("Could not parse toml input file.");
         generate_report(&rt)
     };
