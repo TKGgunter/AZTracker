@@ -9,7 +9,9 @@
 //
 
 //TODO
+//- tags are not good. they hsould be handelled the same way leadership principles are.
 //- handle toml parsing errors - this requires some altering of the toml crate
+//
 
 use std::fs::File;
 use std::io::prelude::*;
