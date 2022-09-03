@@ -25,7 +25,7 @@ const UNWRAP_DATE_FAIL :&'static str = "In input file date was not properly form
 const MONTHS : [&'static str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "June", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const LEADERSHIP : [&'static str; 16] = ["Customer Obsession", "Ownership", "Invent and Simplify", "Are Right, A Lot", "Learn and Be Curious", "Hire and Develop the Best", "Insist on the Highest Standards", "Think Big", "Bias for Action", "Frugality", "Earn Trust", "Dive Deep", "Have Backbone", "Deliver Results", "Strive to be Earth's Best Employer", "Success and Scale Bring Responsibility"];
 
-const BR_COLOR : &'static str = "\"#005500\"";
+const BR_COLOR : &'static str = "\"#1d6860\"";
 const OFFHOURS_COLOR : &'static str = "\"#555577\"";
 
 fn generate_show_more_less_fn(rt: &mut String){
@@ -201,14 +201,19 @@ fn generate_css(rt: &mut String){
   display: none;
   padding: 6px 12px;
   border-top: none;
-} 
+}
+
+/* Style for event tag legend */
+.legend {
+    font-size: 1.1em;
+    padding-left: 16px;
+}
 
 table {
   table-layout: fixed;
   width: 100%;
   border-collapse: collapse;
   border: 3px solid purple;
-  margin:10px;
 }
 
 th {
@@ -217,22 +222,33 @@ th {
 }
 
 th, td {
-  padding: 10px;
-  border-right: solid 1px #f00; 
-  border-left: solid 1px #f00;
+  padding: 7px;
+  border-right: solid 1px #aaaaaa; 
+  border-left: solid 1px #aaaaaa;
+  font-size: 1.02em;
+  line-height: 1.5;
 }
 
 td {
-  border-bottom: solid 1px #ffffff;
+  border-bottom: solid 1px #aaaaaa;
 }
+
+.summary th, tr {
+  padding: 7px;
+  font-size: 1.02em;
+  line-height: 1.5;
+  border-left: 0px;
+  border-right: 0px;
+}
+
 .hideContent {
     overflow: hidden;
-    line-height: 1.09em;
-    height: 3.30em;
+    line-height: 1.3em;
+    height: 5.30em;
 }
 
 .showContent {
-    line-height: 1.09em;
+    line-height: 1.3em;
     height: auto;
 }
 .smallColumn {
@@ -304,20 +320,20 @@ fn generate_leadership_principles_monthly_review(input: &Vec::<Event>, month: u8
     *rt += "\t\t<th colspan=\"16\" style=\"font-size:150%\">Monthly Summary</th>\n";
     *rt += "\t</tr>\n";
 
-    *rt += "\t<tr>\n";
+    *rt += "\t<tr class=\"summary\">\n";
     for lt in LEADERSHIP.iter(){
         *rt += &format!("\t\t<th>{}</th>\n", lt);
     }
-    *rt += "\t</tr>";
+    *rt += "\t</tr>\n";
 
-    *rt += "\t<tr>";
+    *rt += "\t<tr class=\"summary\">";
     for lt in leadership_arr.iter(){
         match lt {
             1..=3 => {
-                *rt += &format!("\t\t<th style=\"color:pink\">{}</th>\n", *lt);
+                *rt += &format!("\t\t<th style=\"background-color:#7d5a0c\">{}</th>\n", *lt);
             },
             4..=u8::MAX => {
-                *rt += &format!("\t\t<th style=\"color:blue;\">{}</th>\n", *lt);
+                *rt += &format!("\t\t<th style=\"background-color:#892e44\">{}</th>\n", *lt);
             },
             _=>{
                 *rt += &format!("\t\t<th>{}</th>\n", *lt);
@@ -348,13 +364,13 @@ fn generate_report(input: &Report)->String{
 
 
     //TODO these colors should be handled in the style section.
-    rt += "<body style=\"background-color:#3b3c3d; color:#ccc\">";
+    rt += "<body style=\"background-color:#3b3c3d; color:#ccc; font-family:Sans-Serif\">";
     generate_tab_links(events, &mut rt);
 
 
     //NOTE 
     //Generates Entry color key
-    rt += "<p>\n";
+    rt += "<p class=\"legend\">\n";
     rt += &format!("Bar raising moment - <font color={}> &#x2588; </font> </br>\n", BR_COLOR);
     rt += &format!("Offhours - <font color={}> &#x2588; </font>\n", OFFHOURS_COLOR);
     rt += "</p>\n";
@@ -553,6 +569,26 @@ deliver_results = 1
 bias_for_action = 1
 are_right_alot = 1
 tags = \"Offhours\"
+
+[[events]]
+summary = \"Some more news.\"
+date = 1979-06-27T07:32:00-08:00
+details = \"\"\" 
+Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut od. Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut od
+\"\"\" 
+deliver_results = 1
+bias_for_action = 1
+are_right_alot = 1
+
+[[events]]
+summary = \"Some more news.\"
+date = 1979-06-27T07:32:00-08:00
+details = \"\"\" 
+Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut od
+\"\"\" 
+customer_obsession = 1
+bias_for_action = 1
+are_right_alot = 1
 
 ";
 
