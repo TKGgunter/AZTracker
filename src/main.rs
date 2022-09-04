@@ -64,7 +64,7 @@ fn begin_table(rt: &mut String){
 
     //TODO this should be done via a macro on the struct definition
     *rt += "\t\t<th class=\"smallColumn\">Date</th>\n";
-    *rt += "\t\t<th style=\"width:25%\">Summary</th>\n";
+    *rt += "\t\t<th style=\"width:22%\">Summary</th>\n";
     *rt += "\t\t<th>Details</th>\n";
     *rt += "\t\t<th style=\"width:20%\">Amazon Leadership Principles</th>\n";
 
@@ -99,7 +99,7 @@ fn add_to_table(input: &Event, rt: &mut String){
 
 
     let date = input.date.date.as_ref().expect(UNWRAP_DATE_FAIL);
-    *rt += &format!("\t\t<td>{}/{}/{}</td>\n", date.month, date.day, date.year);
+    *rt += &format!("\t\t<td class=\"valueCells\">{}/{}/{}</td>\n", date.month, date.day, date.year);
 
     *rt += &format!("\t\t<td>{}</td>\n", input.summary);
 
@@ -259,7 +259,7 @@ td {
     height: auto;
 }
 .smallColumn {
-    width: 10%;
+    width: 7%;
 }
 .valueCells{
    text-align: center;
@@ -483,6 +483,28 @@ struct Event{
 }
 
 
+
+fn markdown_to_html(input: &str)->String {
+    //NOTE 
+    //This is an example from
+    //https://github.com/raphlinus/pulldown-cmark/blob/master/examples/string-to-string.rs
+
+   
+    
+    // Set up options and parser. Strikethroughs are not part of the CommonMark standard
+    // and we therefore must enable it explicitly.
+    let mut options = Options::empty();
+    options.insert(Options::ENABLE_STRIKETHROUGH);
+    let parser = Parser::new_ext(input, options);
+
+
+    let mut html_output: String = String::with_capacity(input.len() * 3 / 2);
+    html::push_html(&mut html_output, parser);
+
+    return html_output;
+}
+
+
 fn main() {
     let matches = Command::new("AZtracker")
         .version("0.1")
@@ -551,7 +573,7 @@ This document was created using a proprietary tool found here, https://github.co
 
 ### Header 3
 
-~Wild boy~
+*Wild boy*
 \"\"\" 
 ownership = 1
 earn_trust = 1
@@ -600,23 +622,3 @@ bias_for_action = 1
 are_right_alot = 1
 ";
 
-
-fn markdown_to_html(input: &str)->String {
-    //NOTE 
-    //This is an example from
-    //https://github.com/raphlinus/pulldown-cmark/blob/master/examples/string-to-string.rs
-
-   
-    
-    // Set up options and parser. Strikethroughs are not part of the CommonMark standard
-    // and we therefore must enable it explicitly.
-    let mut options = Options::empty();
-    options.insert(Options::ENABLE_STRIKETHROUGH);
-    let parser = Parser::new_ext(input, options);
-
-
-    let mut html_output: String = String::with_capacity(input.len() * 3 / 2);
-    html::push_html(&mut html_output, parser);
-
-    return html_output;
-}
