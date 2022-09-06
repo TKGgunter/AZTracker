@@ -26,7 +26,7 @@ const MONTHS : [&'static str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "June", 
 const LEADERSHIP : [&'static str; 16] = ["Customer Obsession", "Ownership", "Invent and Simplify", "Are Right, A Lot", "Learn and Be Curious", "Hire and Develop the Best", "Insist on the Highest Standards", "Think Big", "Bias for Action", "Frugality", "Earn Trust", "Dive Deep", "Have Backbone", "Deliver Results", "Strive to be Earth's Best Employer", "Success and Scale Bring Responsibility"];
 
 const BR_COLOR : &'static str = "\"#1d6860\"";
-const OFFHOURS_COLOR : &'static str = "\"#555577\"";
+const INVEST_IN_YOURSELF_COLOR : &'static str = "\"#555577\"";
 
 fn generate_show_more_less_fn(rt: &mut String){
     *rt += "<script>
@@ -85,8 +85,8 @@ fn add_to_table(input: &Event, rt: &mut String){
         "br" | "bar raising" => {
             *rt += &format!("\t<tr bgcolor={}>\n", BR_COLOR);
         },
-        "offhours" => {
-            *rt += &format!("\t<tr bgcolor={}>\n", OFFHOURS_COLOR);
+        "invest" | "invest in your self" => {
+            *rt += &format!("\t<tr bgcolor={}>\n", INVEST_IN_YOURSELF_COLOR);
         },
         "" => {
             *rt += "\t<tr>\n";
@@ -379,7 +379,7 @@ fn generate_report(input: &Report)->String{
     //Generates Entry color key
     rt += "<p class=\"legend\">\n";
     rt += &format!("Bar raising moment - <font color={}> &#x2588; </font> </br>\n", BR_COLOR);
-    rt += &format!("Offhours - <font color={}> &#x2588; </font>\n", OFFHOURS_COLOR);
+    rt += &format!("Invest in yourself - <font color={}> &#x2588; </font>\n", INVEST_IN_YOURSELF_COLOR);
     rt += "</p>\n";
 
 
@@ -599,7 +599,7 @@ Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architec
 deliver_results = 1
 bias_for_action = 1
 are_right_alot = 1
-tags = \"Offhours\"
+tags = \"invest\"
 
 [[events]]
 summary = \"Some more news.\"
