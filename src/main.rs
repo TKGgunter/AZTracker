@@ -7,9 +7,8 @@
 //
 
 //TODO
-//- add feedback link
 //- Summary needs to handle mark down.
-//- tweek vertical show more threshold
+//- make vertical threshold browser agnostic.
 //- Details there is a preceeding new line. I would like to get rid of it.
 //- tags are not good. they should be handelled the same way leadership principles are.
 //- handle toml parsing errors - this requires some altering of the toml crate
@@ -30,6 +29,11 @@ const LEADERSHIP : [&'static str; 16] = ["Customer Obsession", "Ownership", "Inv
 
 const BR_COLOR : &'static str = "\"#1d6860\"";
 const INVEST_IN_YOURSELF_COLOR : &'static str = "\"#555577\"";
+
+const FEEDBACK_LINK : &'static str = "https://quip-amazon.com/yil8AxIlg78u/Accomplishment-and-Invest-in-Yourself-Tracker-Thoth#temp:C:LfXc7ddf386401743d0a4944584c";
+
+
+
 
 fn generate_show_more_less_fn(rt: &mut String){
     *rt += "<script>
@@ -254,7 +258,7 @@ td {
 .hideContent {
     overflow: hidden;
     line-height: 1.3em;
-    height: 5.20em;
+    height: 5.05em;
 }
 
 .showContent {
@@ -384,6 +388,11 @@ fn generate_report(input: &Report)->String{
     rt += &format!("Bar raising moment - <font color={}> &#x2588; </font> </br>\n", BR_COLOR);
     rt += &format!("Invest in yourself - <font color={}> &#x2588; </font>\n", INVEST_IN_YOURSELF_COLOR);
     rt += "</p>\n";
+
+
+    rt += "<p class=\"legend\">If you have feedback please follow this <a href=\"";
+    rt += FEEDBACK_LINK;
+    rt += "\">link</a>.</p>\n";
 
 
     let mut current_month;
