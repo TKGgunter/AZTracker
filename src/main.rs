@@ -7,6 +7,9 @@
 //
 
 //TODO
+//- Summary needs to handle mark down.
+//- tweek vertical show more threshold
+//- Details there is a preceeding new line. I would like to get rid of it.
 //- tags are not good. they should be handelled the same way leadership principles are.
 //- handle toml parsing errors - this requires some altering of the toml crate
 //
