@@ -9,9 +9,10 @@
 //TODO
 //- Summary needs to handle mark down.
 //- make vertical threshold browser agnostic.
-//- Details there is a preceeding new line. I would like to get rid of it.
 //- tags are not good. they should be handelled the same way leadership principles are.
 //- handle toml parsing errors - this requires some altering of the toml crate
+//- link opens for feedback opens in new tab or window or something https://www.thesitewizard.com/html-tutorial/open-links-in-new-window-or-tab.shtml
+//- Details there is a preceeding new line. I would like to get rid of it.
 
 use std::fs::File;
 use std::io::prelude::*;
