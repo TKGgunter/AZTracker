@@ -11,6 +11,7 @@
 //- Handle new years.
 //- make vertical threshold browser agnostic.
 //- tags are not good. they should be handelled the same way leadership principles are.
+//- const file?
 //- handle toml parsing errors - this requires some altering of the toml crate
 //- link opens for feedback opens in new tab or window or something https://www.thesitewizard.com/html-tutorial/open-links-in-new-window-or-tab.shtml
 //- Details there is a preceeding new line. I would like to get rid of it.
