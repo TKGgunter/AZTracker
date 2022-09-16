@@ -8,6 +8,7 @@
 
 //TODO
 //- Summary needs to handle mark down.
+//- Handle new years.
 //- make vertical threshold browser agnostic.
 //- tags are not good. they should be handelled the same way leadership principles are.
 //- handle toml parsing errors - this requires some altering of the toml crate
