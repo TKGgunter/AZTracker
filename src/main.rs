@@ -7,8 +7,9 @@
 //
 
 //TODO
-//- Summary needs to handle mark down.
+//- Sort dates
 //- Handle new years.
+//- Robust implementation of default to current or closest month
 //- make vertical threshold browser agnostic.
 //- tags are not good. they should be handelled the same way leadership principles are.
 //- const file?
@@ -111,7 +112,8 @@ fn add_to_table(input: &Event, rt: &mut String){
     let date = input.date.date.as_ref().expect(UNWRAP_DATE_FAIL);
     *rt += &format!("\t\t<td class=\"valueCells\">{}/{}/{}</td>\n", date.month, date.day, date.year);
 
-    *rt += &format!("\t\t<td>{}</td>\n", input.summary);
+    let summary = markdown_to_html(&input.summary);
+    *rt += &format!("\t\t<td>{}</td>\n", summary);
 
 
     let details = markdown_to_html(input.details.as_ref().unwrap_or(&String::new()));
@@ -137,17 +139,30 @@ fn add_to_table(input: &Event, rt: &mut String){
 }
 
 fn generate_tab_links(input: &Vec<Event>, rt: &mut String){
-    //TODO the default should be the date closest to the current date
     
     *rt += "\n<div class=\"tab\">";
 
     let mut month;
     let mut seen_month = 13;
+
+    //////////
+    //TODO
+    //we should not literate over the full input list multiple times. 
+    //We should keep the min and max months... we should think about this more deeply.
+    let mut max_month = 13;
+    for it in input.iter(){
+        month  = it.date.date.as_ref().expect(UNWRAP_DATE_FAIL).month as usize;
+        if max_month != month { //TODO if things are out of order we will have problems.
+            max_month = month;
+        }
+    }
+    //////////
+
     for (i, it) in input.iter().enumerate(){
         month  = it.date.date.as_ref().expect(UNWRAP_DATE_FAIL).month as usize;
-        if seen_month != month {
+        if seen_month != month { //TODO if things are out of order we will have problems.
             seen_month = month;
-            let id_tag = if i == 0 {  "id=\"defaultOpen\"" } else { "" };
+            let id_tag = if month == max_month {  "id=\"defaultOpen\"" } else { "" };
 
             *rt += &format!("<button class=\"tablinks\" onclick=\"openMonth(event, '{0}')\" {1}>{0}</button>\n", MONTHS[month-1], id_tag);
         }
@@ -159,7 +174,7 @@ fn generate_tab_links(input: &Vec<Event>, rt: &mut String){
 fn generate_js_openmonth(rt: &mut String){
     *rt += "
 <script>
-function openMonth(evt, cityName) {
+function openMonth(evt, monthName) {
   // Declare all variables
   var i, tabcontent, tablinks;
 
@@ -176,7 +191,7 @@ function openMonth(evt, cityName) {
   }
 
   // Show the current tab, and add an \"active\" class to the button that opened the tab
-  document.getElementById(cityName).style.display = \"block\";
+  document.getElementById(monthName).style.display = \"block\";
   evt.currentTarget.className += \" active\";
 }
 </script>
