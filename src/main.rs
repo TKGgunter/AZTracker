@@ -19,6 +19,7 @@
 
 use std::fs::File;
 use std::io::prelude::*;
+use std::collections::HashSet;
 
 use serde_derive::Deserialize;
 use toml;
@@ -143,21 +144,31 @@ fn generate_tab_links(input: &Vec<Event>, rt: &mut String){
     *rt += "\n<div class=\"tab\">";
 
     let mut month;
-    let mut seen_month = 13;
 
-    //////////
-    //TODO
-    //we should not literate over the full input list multiple times. 
-    //We should keep the min and max months... we should think about this more deeply.
-    let mut max_month = 13;
+    let mut month_set = HashSet::new();
+    let mut max_month = 0;
     for it in input.iter(){
         month  = it.date.date.as_ref().expect(UNWRAP_DATE_FAIL).month as usize;
-        //TODO add to set.
-        if max_month != month { //TODO if things are out of order we will have problems.
+        month_set.insert(month);
+        
+        //TODO if our input were ordered we would not need this.
+        if month > max_month {
             max_month = month;
         }
     }
-    //////////
+
+
+    let mut month_list = month_set.iter().collect::<Vec<&usize>>();
+    month_list.sort();
+
+    for it in month_list.iter(){
+        month = **it;
+        let id_tag = if month == max_month {  "id=\"defaultOpen\"" } else { "" };
+        *rt += &format!("<button class=\"tablinks\" onclick=\"openMonth(event, '{0}')\" {1}>{0}</button>\n", MONTHS[month-1], id_tag);
+    }
+
+    /* TODO check using current source then delete me.
+    let mut seen_month = 13; //TODO  remove this 
 
     for (i, it) in input.iter().enumerate(){
         month  = it.date.date.as_ref().expect(UNWRAP_DATE_FAIL).month as usize;
@@ -168,6 +179,7 @@ fn generate_tab_links(input: &Vec<Event>, rt: &mut String){
             *rt += &format!("<button class=\"tablinks\" onclick=\"openMonth(event, '{0}')\" {1}>{0}</button>\n", MONTHS[month-1], id_tag);
         }
     }
+    */
 
     *rt += "</div>\n";
 }
