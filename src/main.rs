@@ -152,6 +152,7 @@ fn generate_tab_links(input: &Vec<Event>, rt: &mut String){
     let mut max_month = 13;
     for it in input.iter(){
         month  = it.date.date.as_ref().expect(UNWRAP_DATE_FAIL).month as usize;
+        //TODO add to set.
         if max_month != month { //TODO if things are out of order we will have problems.
             max_month = month;
         }
