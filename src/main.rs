@@ -7,7 +7,6 @@
 //
 
 //TODO
-//- when showing more the page automatically scrolls to the top.
 //- Sort dates
 //- Handle new years.
 //- Robust implementation of default to current or closest month
