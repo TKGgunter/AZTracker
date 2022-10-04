@@ -121,10 +121,10 @@ fn add_to_table(input: &Event, rt: &mut String){
     let details = markdown_to_html(input.details.as_ref().unwrap_or(&String::new()));
     *rt += &format!("\t\t<td> <div class=\"content hideContent\">{}</div>
 \t\t<div class=\"show-more\">
-\t\t    <a href=\"#\">Show more</a>
+\t\t    <a href=\"javascript:void(0)\">Show more</a>
 \t\t</div>
 </td>\n", &details);
-
+// \t\t    <a href=\"#\">Show more</a>
     let leadership_values = {
         let mut rt = String::new();
         for it in LEADERSHIP.iter(){
