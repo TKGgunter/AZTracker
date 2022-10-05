@@ -7,9 +7,9 @@
 //
 
 //TODO
-//- Sort dates
+//- summary tab (includes year, quarter filter, )
 //- Handle new years.
-//- Robust implementation of default to current or closest month
+//- Sort dates
 //- make vertical threshold browser agnostic.
 //- tags are not good. they should be handelled the same way leadership principles are.
 //- const file?
