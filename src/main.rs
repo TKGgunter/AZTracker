@@ -65,6 +65,7 @@ fn add_js_libraries(rt: &mut String){
 \"https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js\">
     </script>\n";
     *rt += "<script src=\"http://code.jquery.com/ui/1.11.4/jquery-ui.js\"></script>\n";
+    *rt += "<script src=\"https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js\"></script>";
 }
 
 fn begin_table(rt: &mut String){
@@ -164,7 +165,7 @@ fn generate_tab_links(input: &Vec<Event>, rt: &mut String){
     for it in month_list.iter(){
         month = **it;
         let id_tag = if month == max_month {  "id=\"defaultOpen\"" } else { "" };
-        *rt += &format!("<button class=\"tablinks\" onclick=\"openMonth(event, '{0}')\" {1}>{0}</button>\n", MONTHS[month-1], id_tag);
+        *rt += &format!("<button class=\"tablinks\" onclick=\"openTab(event, '{0}')\" {1}>{0}</button>\n", MONTHS[month-1], id_tag);
     }
 
     /* TODO check using current source then delete me.
@@ -176,18 +177,19 @@ fn generate_tab_links(input: &Vec<Event>, rt: &mut String){
             seen_month = month;
             let id_tag = if month == max_month {  "id=\"defaultOpen\"" } else { "" };
 
-            *rt += &format!("<button class=\"tablinks\" onclick=\"openMonth(event, '{0}')\" {1}>{0}</button>\n", MONTHS[month-1], id_tag);
+            *rt += &format!("<button class=\"tablinks\" onclick=\"openTab(event, '{0}')\" {1}>{0}</button>\n", MONTHS[month-1], id_tag);
         }
     }
     */
 
+    *rt += &format!("<button class=\"tablinks\" onclick=\"openTab(event, '{0}')\">{0}</button>\n", "Summary");
     *rt += "</div>\n";
 }
 
 fn generate_js_openmonth(rt: &mut String){
     *rt += "
 <script>
-function openMonth(evt, monthName) {
+function openTab(evt, monthName) {
   // Declare all variables
   var i, tabcontent, tablinks;
 
@@ -392,6 +394,78 @@ fn generate_leadership_principles_monthly_review(input: &Vec::<Event>, month: u8
     
 }
 
+fn generate_summary(rt: &mut String){
+    *rt += "\n<div id=\"Summary\" class=\"tabcontent\">\n";
+    *rt += "\t<div style=\"float: left; width: 80%\">";
+    *rt += "\t\t<canvas id=\"principlesYearSummary\" width=\"300\" height=\"100\"></canvas>\n";
+    *rt += "\t</div>\n";
+    *rt += "</div>" ;
+}
+fn generate_summary_scripts(events: &Vec<Event>, rt: &mut String){
+    *rt += "<script>";
+
+    let leadership_arr : [u8; 16] = {//Compute
+        let mut arr = [0u8; 16];
+
+        for it in events.iter(){
+            let month = (it.date.date.as_ref().expect(UNWRAP_DATE_FAIL).month - 1) as usize;
+            for (l, lt) in LEADERSHIP.iter().enumerate(){
+                if map_stringlp_to_eventlp(lt, it) != 0 {
+                    arr[l] += 1;
+                }
+            }
+        }
+        arr
+    };
+
+    //NOTE
+    //Generates the per a tally of the leadership princples for the year
+    let script = format!("
+const ctx = document.getElementById('principlesYearSummary');
+const data = {:?};
+const myChart = new Chart(ctx, {{
+    type: 'bar',
+    data: {{
+        labels: {:?},
+        datasets: [{{
+            label: '# Leadership Principles',
+            data: data,
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1
+        }}]
+    }},
+    options: {{
+        plugins: {{ legend: {{
+            labels: {{
+                // This more specific font property overrides the global property
+                font: {{
+                    size: 24,
+                }}
+            }}
+        }} }} ,
+        scales: {{
+            y: {{
+                beginAtZero: true
+            }},
+
+            xAxes: {{
+                ticks: {{
+                    autoSkip: false,
+                    maxRotation: 70,
+                    minRotation: 70,
+                    font: {{
+                        size: 18,
+                    }},
+                }}
+            }}, 
+        }}
+    }}
+}});", leadership_arr, LEADERSHIP);
+    *rt += &script;
+    *rt += "\n</script>\n";
+}
+
 fn generate_report(input: &Report)->String{
     //TODO handle non existant reports and non existant event vec.
     //The type should prob be changed to a Option/Result that we get from toml.
@@ -464,7 +538,13 @@ fn generate_report(input: &Report)->String{
     }
     end_table(&mut page);
     rt += &page;
+
+    generate_summary(&mut rt);
     rt += "</body>";
+
+
+
+    generate_summary_scripts(events, &mut rt);
 
     //The following ensures that "show more" is visible only when there are more than 3 lines of
     //text.
@@ -549,6 +629,7 @@ fn markdown_to_html(input: &str)->String {
 
 
 fn main() {
+
     let matches = Command::new("AZtracker")
         .version("0.1")
         .author("Thoth Gunter <mtgunter@amazon.com>")
