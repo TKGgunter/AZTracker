@@ -398,45 +398,48 @@ fn generate_summary(rt: &mut String){
     *rt += "\n<div id=\"Summary\" class=\"tabcontent\">\n";
     *rt += "\t<div style=\"float: left; width: 80%\">";
     *rt += "\t\t<canvas id=\"principlesYearSummary\" width=\"300\" height=\"100\"></canvas>\n";
+    *rt += "\t\t<canvas id=\"principlesMonthSummary\" width=\"300\" height=\"100\"></canvas>\n";
     *rt += "\t</div>\n";
     *rt += "</div>" ;
 }
 fn generate_summary_scripts(events: &Vec<Event>, rt: &mut String){
     *rt += "<script>";
 
-    let leadership_arr : [u8; 16] = {//Compute
-        let mut arr = [0u8; 16];
+    let mut leadership_arr : [u8; 16] = [0u8; 16];
+    let mut month_arr : [[u8; 12]; 16] = [[0u8; 12]; 16];
+    {//Compute
 
         for it in events.iter(){
             let month = (it.date.date.as_ref().expect(UNWRAP_DATE_FAIL).month - 1) as usize;
             for (l, lt) in LEADERSHIP.iter().enumerate(){
                 if map_stringlp_to_eventlp(lt, it) != 0 {
-                    arr[l] += 1;
+                    leadership_arr[l] += 1;
+                    month_arr[l][month] += 1;
                 }
             }
         }
-        arr
     };
 
     //NOTE
     //Generates the per a tally of the leadership princples for the year
     let script = format!("
 const ctx = document.getElementById('principlesYearSummary');
-const data = {:?};
+const leadership_data = {:?};
 const myChart = new Chart(ctx, {{
     type: 'bar',
     data: {{
         labels: {:?},
         datasets: [{{
             label: '# Leadership Principles',
-            data: data,
+            data: leadership_data,
             backgroundColor: 'rgba(255, 99, 132, 0.2)',
             borderColor: 'rgba(255, 99, 132, 1)',
             borderWidth: 1
         }}]
     }},
     options: {{
-        plugins: {{ legend: {{
+        plugins: {{ 
+            legend: {{
             labels: {{
                 // This more specific font property overrides the global property
                 font: {{
@@ -461,7 +464,46 @@ const myChart = new Chart(ctx, {{
             }}, 
         }}
     }}
-}});", leadership_arr, LEADERSHIP);
+}});
+", leadership_arr, LEADERSHIP);
+
+    
+
+    let datasets = {
+        let mut rt = String::new();
+        for (i, it) in month_arr.iter().enumerate(){
+            rt += &format!("{{
+    label: \"{}\",
+    data: {:?},
+    backgroundColor: YlGnBu9[{}],
+    borderColor: YlGnBu9[{}],
+    
+}},\n", LEADERSHIP[i], it, i, i);
+        }
+        rt
+    };
+    
+    *rt += "\nChart.defaults.font.size = 18;\n";
+
+    *rt +="const YlGnBu9 = ['#4E79A7', '#A0CBE8', '#F28E2B', '#FFBE7D', '#59A14F', '#8CD17D', '#B6992D', '#F1CE63', '#499894', '#86BCB6', '#E15759', '#FF9D9A', '#79706E', '#BAB0AC', '#D37295', '#FABFD2', '#B07AA1', '#D4A6C8', '#9D7660', '#D7B5A6'];";
+    *rt += &format!("const ctx1 = document.getElementById('principlesMonthSummary');
+const myChart1 = new Chart(ctx1, {{
+    type: 'line',
+    data: {{
+        labels: {:?},
+        datasets: [{}],
+    }},
+    options: {{
+        plugins: {{legend: {{
+        labels: {{
+            font: {{
+                size: 18,
+            }}
+        }}
+    }} }} ,
+    }},
+}});", MONTHS, datasets);
+
     *rt += &script;
     *rt += "\n</script>\n";
 }
