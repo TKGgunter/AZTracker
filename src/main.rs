@@ -7,8 +7,8 @@
 //
 
 //TODO
-//- summary tab (includes year, quarter filter, )
-//- Handle new years.
+//- produce auto gpt3 summaries and details
+//- Handle new years. We should produce a new file and be able to link to them.
 //- Sort dates
 //- make vertical threshold browser agnostic.
 //- tags are not good. they should be handelled the same way leadership principles are.
@@ -16,6 +16,16 @@
 //- handle toml parsing errors - this requires some altering of the toml crate
 //- link opens for feedback opens in new tab or window or something https://www.thesitewizard.com/html-tutorial/open-links-in-new-window-or-tab.shtml
 //- Details there is a preceeding new line. I would like to get rid of it.
+
+
+//TODO The following is an example of a drop down menu that would allow one to select the year.
+/*
+<select name="year" id="Year" style="font-size: 2em; float: right; padding-right: 50px; padding-top: 8px">
+  <option value="2022">2022</option>
+  <option value="2023">2023</option>
+  <option value="2024">2024</option>
+</select>
+*/
 
 use std::fs::File;
 use std::io::prelude::*;
@@ -167,21 +177,6 @@ fn generate_tab_links(input: &Vec<Event>, rt: &mut String){
         let id_tag = if month == max_month {  "id=\"defaultOpen\"" } else { "" };
         *rt += &format!("<button class=\"tablinks\" onclick=\"openTab(event, '{0}')\" {1}>{0}</button>\n", MONTHS[month-1], id_tag);
     }
-
-    /* TODO check using current source then delete me.
-    let mut seen_month = 13; //TODO  remove this 
-
-    for (i, it) in input.iter().enumerate(){
-        month  = it.date.date.as_ref().expect(UNWRAP_DATE_FAIL).month as usize;
-        if seen_month != month { //TODO if things are out of order we will have problems.
-            seen_month = month;
-            let id_tag = if month == max_month {  "id=\"defaultOpen\"" } else { "" };
-
-            *rt += &format!("<button class=\"tablinks\" onclick=\"openTab(event, '{0}')\" {1}>{0}</button>\n", MONTHS[month-1], id_tag);
-        }
-    }
-    */
-
     *rt += &format!("<button class=\"tablinks\" onclick=\"openTab(event, '{0}')\">{0}</button>\n", "Summary");
     *rt += "</div>\n";
 }
