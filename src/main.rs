@@ -7,9 +7,9 @@
 //
 
 //TODO
-//- produce auto gpt3 summaries and details
 //- Handle new years. We should produce a new file and be able to link to them.
-//- Sort dates
+//- Restrucution how toml data is handled. There should be an intermediate format, think a sorted
+//csv before any html generation is done.
 //- make vertical threshold browser agnostic.
 //- tags are not good. they should be handelled the same way leadership principles are.
 //- const file?
@@ -37,6 +37,10 @@ use clap::{Command, Arg};
 use colored::*;
 use pulldown_cmark::{html, Options, Parser};
 
+mod test;
+use crate::test::TEST;
+
+
 const UNWRAP_DATE_FAIL :&'static str = "In input file date was not properly formatted.";
 
 const MONTHS : [&'static str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "June", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -48,7 +52,21 @@ const INVEST_IN_YOURSELF_COLOR : &'static str = "\"#555577\"";
 const FEEDBACK_LINK : &'static str = "https://quip-amazon.com/yil8AxIlg78u/Accomplishment-and-Invest-in-Yourself-Tracker-Thoth#temp:C:LfXc7ddf386401743d0a4944584c";
 
 
+fn generate_year_select_drop_down(report_year: ReportYear, rt: &mut String){
 
+    *rt += "<select onchange=\"location = this.options[this.selectedIndex].value;\" name=\"year\" id=\"Year\" style=\"font-size: 2em; float: right; padding-right: 50px; padding-top: 8px\">\n";
+
+    for it in report_year.years.iter(){
+        let mut file_name = report_year.base_file_name.clone();
+        if *it != report_year.years[0]{//TODO this needs to be the max year
+            file_name += &it.to_string();
+        }
+        file_name += ".html";
+        *rt += &format!("\t<option value=\"{}\">{}</option>\n", file_name, it);
+    }
+
+    *rt += "</select>";
+}
 
 fn generate_show_more_less_fn(rt: &mut String){
     *rt += "<script>
@@ -150,16 +168,24 @@ fn add_to_table(input: &Event, rt: &mut String){
     *rt += "\t</tr>\n";
 }
 
-fn generate_tab_links(input: &Vec<Event>, rt: &mut String){
+fn generate_tab_links(input: &Vec<Event>, report_year: usize, rt: &mut String){
     
     *rt += "\n<div class=\"tab\">";
 
     let mut month;
+    let mut year;
 
     let mut month_set = HashSet::new();
     let mut max_month = 0;
     for it in input.iter(){
-        month  = it.date.date.as_ref().expect(UNWRAP_DATE_FAIL).month as usize;
+        let it_date = it.date.date.as_ref().expect(UNWRAP_DATE_FAIL);
+        month = it_date.month as usize;
+        year  = it_date.year as usize;
+
+        if year != report_year {
+            continue;
+        }
+
         month_set.insert(month);
         
         //TODO if our input were ordered we would not need this.
@@ -172,12 +198,15 @@ fn generate_tab_links(input: &Vec<Event>, rt: &mut String){
     let mut month_list = month_set.iter().collect::<Vec<&usize>>();
     month_list.sort();
 
-    for it in month_list.iter(){
+    for it in month_list.iter() {
         month = **it;
         let id_tag = if month == max_month {  "id=\"defaultOpen\"" } else { "" };
         *rt += &format!("<button class=\"tablinks\" onclick=\"openTab(event, '{0}')\" {1}>{0}</button>\n", MONTHS[month-1], id_tag);
     }
     *rt += &format!("<button class=\"tablinks\" onclick=\"openTab(event, '{0}')\">{0}</button>\n", "Summary");
+
+    //TODO add drop down here at the end of the bar.
+    //generate_year_select_drop_down(ry, rt);
     *rt += "</div>\n";
 }
 
@@ -207,6 +236,7 @@ function openTab(evt, monthName) {
 </script>
 ";
 }
+
 fn generate_css(rt: &mut String){
     *rt += "<style type=\"text/css\">";
     *rt += "\n/* Style the tab */
@@ -339,7 +369,7 @@ fn map_stringlp_to_eventlp(stringlp: &str, eventlp: &Event)->u8{
     }
 }
 
-fn generate_leadership_principles_monthly_review(input: &Vec::<Event>, month: u8, rt: &mut String){
+fn generate_leadership_principles_monthly_review(input: &Vec::<Event>, month: u8, year: usize, rt: &mut String){
 
     let leadership_arr : [u8; 16] = {//Compute
         let mut arr = [0u8; 16];
@@ -348,6 +378,10 @@ fn generate_leadership_principles_monthly_review(input: &Vec::<Event>, month: u8
             if it.date.date.as_ref().expect(UNWRAP_DATE_FAIL).month != month {
                 continue;
             }
+            if it.date.date.as_ref().expect(UNWRAP_DATE_FAIL).year as usize != year {
+                continue;
+            }
+            //TODO handle different years
             for (l, lt) in LEADERSHIP.iter().enumerate(){
                 if map_stringlp_to_eventlp(lt, it) != 0 {
                     arr[l] += 1;
@@ -402,18 +436,16 @@ fn generate_summary_scripts(events: &Vec<Event>, rt: &mut String){
 
     let mut leadership_arr : [u8; 16] = [0u8; 16];
     let mut month_arr : [[u8; 12]; 16] = [[0u8; 12]; 16];
-    {//Compute
 
-        for it in events.iter(){
-            let month = (it.date.date.as_ref().expect(UNWRAP_DATE_FAIL).month - 1) as usize;
-            for (l, lt) in LEADERSHIP.iter().enumerate(){
-                if map_stringlp_to_eventlp(lt, it) != 0 {
-                    leadership_arr[l] += 1;
-                    month_arr[l][month] += 1;
-                }
+    for it in events.iter(){
+        let month = (it.date.date.as_ref().expect(UNWRAP_DATE_FAIL).month - 1) as usize;
+        for (l, lt) in LEADERSHIP.iter().enumerate(){
+            if map_stringlp_to_eventlp(lt, it) != 0 {
+                leadership_arr[l] += 1;
+                month_arr[l][month] += 1;
             }
         }
-    };
+    }
 
     //NOTE
     //Generates the per a tally of the leadership princples for the year
@@ -503,7 +535,7 @@ const myChart1 = new Chart(ctx1, {{
     *rt += "\n</script>\n";
 }
 
-fn generate_report(input: &Report)->String{
+fn generate_report(input: &Report, report_year: ReportYear)->String{
     //TODO handle non existant reports and non existant event vec.
     //The type should prob be changed to a Option/Result that we get from toml.
 
@@ -521,7 +553,7 @@ fn generate_report(input: &Report)->String{
 
     //TODO these colors should be handled in the style section.
     rt += "<body style=\"background-color:#3b3c3d; color:#ccc; font-family:Sans-Serif\">";
-    generate_tab_links(events, &mut rt);
+    generate_tab_links(events, report_year.year, &mut rt);
 
 
     //NOTE 
@@ -538,16 +570,25 @@ fn generate_report(input: &Report)->String{
 
 
     let mut current_month;
+    let mut current_year;
     let mut page = String::new();
     let mut i = 0;
 
 
     //TODO if a poorly formatted date is submitted the error should contain bad date.
     while i < events.len() {
-        current_month = events[i].date.date.as_ref().expect(UNWRAP_DATE_FAIL).month as usize;
+        let date = events[i].date.date.as_ref().expect(UNWRAP_DATE_FAIL);
+        current_month = date.month as usize;
+        current_year = date.year as usize;
+        
+        if current_year !=  report_year.year {
+            i += 1;
+            continue;
+        }
+
         rt += &format!("\n<div id=\"{}\" class=\"tabcontent\">\n", MONTHS[current_month-1]);
     
-        generate_leadership_principles_monthly_review(&events, current_month as u8, &mut page);
+        generate_leadership_principles_monthly_review(&events, current_month as u8, current_year, &mut page);
 
         begin_table(&mut page);
         add_to_table(&events[i], &mut page);
@@ -558,6 +599,12 @@ fn generate_report(input: &Report)->String{
         let mut j = i+1;
         while  j < events.len(){
             let jth_month = events[j].date.date.as_ref().expect(UNWRAP_DATE_FAIL).month as usize;
+            let jth_year  = events[j].date.date.as_ref().expect(UNWRAP_DATE_FAIL).year as usize;
+
+            if jth_year !=  report_year.year {
+                j += 1;
+                continue;
+            }
 
             if jth_month >= 1 + current_month{
                 end_table(&mut page);
@@ -583,6 +630,7 @@ fn generate_report(input: &Report)->String{
 
     generate_summary_scripts(events, &mut rt);
 
+    //NOTE
     //The following ensures that "show more" is visible only when there are more than 3 lines of
     //text.
     rt += "<script>\n";
@@ -610,10 +658,28 @@ for (var j = 0; j < tabs.length; j++) {
     return rt;
 }
 
+fn get_unique_years(input: &Report)->Vec<usize>{
+    let mut unique_years = HashSet::new();
+
+    for e in &input.events{
+        unique_years.insert(e.date.date.as_ref().expect(UNWRAP_DATE_FAIL).year as usize);
+    }
+
+    let mut rt = Vec::from_iter(unique_years);
+    rt.sort();
+    rt.reverse();
+    return rt;
+}
 
 #[derive(Deserialize, Debug)]
 struct Report{
     events: Vec<Event>,
+}
+
+struct ReportYear{
+    year: usize,
+    base_file_name: String,
+    years: Vec<usize>
 }
 
 #[derive(Deserialize, Debug)]
@@ -703,83 +769,55 @@ fn main() {
         }
     };
 
+    let output_file_name = matches.get_one::<String>("output");
 
-    let report = {
-        let rt : Report = toml::from_str(&input_file_text).expect("Could not parse toml input file.");
-        generate_report(&rt)
+    let reports = {
+        let report : Report = toml::from_str(&input_file_text).expect("Could not parse toml input file.");
+        let years = get_unique_years(&report);
+
+        let mut rt = Vec::new();
+        for year in years.iter(){
+            let _output_file_name = {
+                match &output_file_name {
+                    Some(base_file_name) =>{
+                        base_file_name.to_string()
+                    }
+                    _=>{
+                        "".to_string()
+                    }
+                }
+            };
+
+            let ry = ReportYear{year: *year, base_file_name: _output_file_name, years: years.clone()};
+            println!("{:?} {}", ry.years, year);
+            rt.push((generate_report(&report, ry), *year));
+        }
+        rt
     };
 
 
 
-    let output_file_name = matches.get_one::<String>("output");
     match output_file_name {
         Some(file_name)=>{
-            let mut f = File::create(file_name).expect("Could not create output file.");
-            f.write_all(report.as_bytes()).expect("Could not write to output file.");
+            for (i, report) in reports.iter().enumerate(){
+
+                let mut _file_name = file_name.to_string();
+                if i >  0 {
+                    _file_name += &report.1.to_string();
+                }
+                _file_name += ".html";
+
+                let mut f = File::create(_file_name).expect("Could not create output file.");
+                f.write_all(report.0.as_bytes()).expect("Could not write to output file.");
+            }
         },
         _=>{
-            println!("{}", report);
+            for report in reports.iter().rev(){
+                println!("{:?}", report);
+            }
         }
     }
 
 
 }
-
-const TEST : &'static str = "
-[[events]]
-summary = \"This is an example.\"
-date = 1979-05-27T07:32:00-08:00
-details = \"\"\" 
-This document was created using a proprietary tool found here, https://github.com/TKGgunter/AZTracker. <b>Testing</b>.
-
-### Header 3
-
-*Wild boy*
-\"\"\" 
-ownership = 1
-earn_trust = 1
-dive_deep = 1
-
-[[events]]
-summary = \"Other work.\"
-date = 1979-06-27T07:32:00-08:00
-details = \"\"\" 
-Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut od
-\"\"\" 
-deliver_results = 1
-bias_for_action = 1
-are_right_alot = 1
-tags = \"Bar raising\"
-
-[[events]]
-summary = \"Some next work.\"
-date = 1979-06-27T07:32:00-08:00
-details = \"\"\" 
-Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut od
-\"\"\" 
-deliver_results = 1
-bias_for_action = 1
-are_right_alot = 1
-tags = \"invest\"
-
-[[events]]
-summary = \"Some more news.\"
-date = 1979-06-27T07:32:00-08:00
-details = \"\"\" 
-Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut od. Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut od
-\"\"\" 
-deliver_results = 1
-bias_for_action = 1
-are_right_alot = 1
-
-[[events]]
-summary = \"Some more news.\"
-date = 2022-09-04
-details = \"\"\" 
-Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut od
-\"\"\" 
-customer_obsession = 1
-bias_for_action = 1
-are_right_alot = 1
-";
 
