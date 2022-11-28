@@ -7,7 +7,7 @@
 //
 
 //TODO
-//- Handle new years. We should produce a new file and be able to link to them.
+//- Move functions around in their own files
 //- Restrucution how toml data is handled. There should be an intermediate format, think a sorted
 //csv before any html generation is done.
 //- make vertical threshold browser agnostic.
@@ -17,15 +17,6 @@
 //- link opens for feedback opens in new tab or window or something https://www.thesitewizard.com/html-tutorial/open-links-in-new-window-or-tab.shtml
 //- Details there is a preceeding new line. I would like to get rid of it.
 
-
-//TODO The following is an example of a drop down menu that would allow one to select the year.
-/*
-<select name="year" id="Year" style="font-size: 2em; float: right; padding-right: 50px; padding-top: 8px">
-  <option value="2022">2022</option>
-  <option value="2023">2023</option>
-  <option value="2024">2024</option>
-</select>
-*/
 
 use std::fs::File;
 use std::io::prelude::*;
