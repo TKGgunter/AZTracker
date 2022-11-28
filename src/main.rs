@@ -52,7 +52,7 @@ const INVEST_IN_YOURSELF_COLOR : &'static str = "\"#555577\"";
 const FEEDBACK_LINK : &'static str = "https://quip-amazon.com/yil8AxIlg78u/Accomplishment-and-Invest-in-Yourself-Tracker-Thoth#temp:C:LfXc7ddf386401743d0a4944584c";
 
 
-fn generate_year_select_drop_down(report_year: ReportYear, rt: &mut String){
+fn generate_year_select_drop_down(report_year: &ReportYear, rt: &mut String){
 
     *rt += "<select onchange=\"location = this.options[this.selectedIndex].value;\" name=\"year\" id=\"Year\" style=\"font-size: 2em; float: right; padding-right: 50px; padding-top: 8px\">\n";
 
@@ -62,7 +62,15 @@ fn generate_year_select_drop_down(report_year: ReportYear, rt: &mut String){
             file_name += &it.to_string();
         }
         file_name += ".html";
-        *rt += &format!("\t<option value=\"{}\">{}</option>\n", file_name, it);
+
+        let selected;
+        if *it == report_year.year{
+            selected = "selected";
+        } else {
+            selected = "";
+        }
+
+        *rt += &format!("\t<option value=\"{}\" {}>{}</option>\n", file_name, selected, it);
     }
 
     *rt += "</select>";
@@ -168,10 +176,11 @@ fn add_to_table(input: &Event, rt: &mut String){
     *rt += "\t</tr>\n";
 }
 
-fn generate_tab_links(input: &Vec<Event>, report_year: usize, rt: &mut String){
+fn generate_tab_links(input: &Vec<Event>, ry: &ReportYear, rt: &mut String){
     
     *rt += "\n<div class=\"tab\">";
 
+    let report_year = ry.year;
     let mut month;
     let mut year;
 
@@ -205,8 +214,7 @@ fn generate_tab_links(input: &Vec<Event>, report_year: usize, rt: &mut String){
     }
     *rt += &format!("<button class=\"tablinks\" onclick=\"openTab(event, '{0}')\">{0}</button>\n", "Summary");
 
-    //TODO add drop down here at the end of the bar.
-    //generate_year_select_drop_down(ry, rt);
+    generate_year_select_drop_down(ry, rt);
     *rt += "</div>\n";
 }
 
@@ -431,7 +439,8 @@ fn generate_summary(rt: &mut String){
     *rt += "\t</div>\n";
     *rt += "</div>" ;
 }
-fn generate_summary_scripts(events: &Vec<Event>, rt: &mut String){
+
+fn generate_summary_scripts(events: &Vec<Event>, ry: &ReportYear, rt: &mut String){
     *rt += "<script>";
 
     let mut leadership_arr : [u8; 16] = [0u8; 16];
@@ -439,6 +448,11 @@ fn generate_summary_scripts(events: &Vec<Event>, rt: &mut String){
 
     for it in events.iter(){
         let month = (it.date.date.as_ref().expect(UNWRAP_DATE_FAIL).month - 1) as usize;
+        let year = it.date.date.as_ref().expect(UNWRAP_DATE_FAIL).year as usize;
+
+        if year != ry.year { //TODO show fraction of principles documented from from slected year.
+            continue;
+        }
         for (l, lt) in LEADERSHIP.iter().enumerate(){
             if map_stringlp_to_eventlp(lt, it) != 0 {
                 leadership_arr[l] += 1;
@@ -553,7 +567,7 @@ fn generate_report(input: &Report, report_year: ReportYear)->String{
 
     //TODO these colors should be handled in the style section.
     rt += "<body style=\"background-color:#3b3c3d; color:#ccc; font-family:Sans-Serif\">";
-    generate_tab_links(events, report_year.year, &mut rt);
+    generate_tab_links(events, &report_year, &mut rt);
 
 
     //NOTE 
@@ -628,7 +642,7 @@ fn generate_report(input: &Report, report_year: ReportYear)->String{
 
 
 
-    generate_summary_scripts(events, &mut rt);
+    generate_summary_scripts(events, &report_year, &mut rt);
 
     //NOTE
     //The following ensures that "show more" is visible only when there are more than 3 lines of
@@ -789,7 +803,6 @@ fn main() {
             };
 
             let ry = ReportYear{year: *year, base_file_name: _output_file_name, years: years.clone()};
-            println!("{:?} {}", ry.years, year);
             rt.push((generate_report(&report, ry), *year));
         }
         rt
