@@ -49,7 +49,7 @@ fn generate_year_select_drop_down(report_year: &ReportYear, rt: &mut String){
 
     for it in report_year.years.iter(){
         let mut file_name = report_year.base_file_name.clone();
-        if *it != report_year.years[0]{//TODO this needs to be the max year
+        if *it != report_year.years[0]{
             file_name += &it.to_string();
         }
         file_name += ".html";
@@ -61,7 +61,7 @@ fn generate_year_select_drop_down(report_year: &ReportYear, rt: &mut String){
             selected = "";
         }
 
-        *rt += &format!("\t<option value=\"{}\" {}>{}</option>\n", file_name, selected, it);
+        *rt += &format!("\t<option value=\"{}\" {}>{}</option>\n", file_name.split("/").last().unwrap(), selected, it);
     }
 
     *rt += "</select>";
